@@ -6,7 +6,13 @@
 
 std::vector<void(*)()> content;
 std::vector<void(*)(bool)> windows;
-std::vector<std::tuple<LPCSTR, float, ImFont**>> fonts;
+struct ImFont_t
+{
+	LPCSTR filename;
+	float size;
+	ImFont **font;
+};
+std::vector<struct ImFont_t> fonts;
 void onLostDevice() { ImGui_ImplDX9_InvalidateDeviceObjects(); }
 void onResetDevice() { ImGui_ImplDX9_CreateDeviceObjects(); }
 void onCreateDevice(LPDIRECT3DDEVICE9 pD3DDevice)
@@ -21,10 +27,10 @@ void onCreateDevice(LPDIRECT3DDEVICE9 pD3DDevice)
 		CHAR syspath[MAX_PATH];
 		GetWindowsDirectory(syspath, MAX_PATH);
 		strcat_s(syspath, "\\Fonts\\");
-		strcat_s(syspath, std::get<0>(fonts[i]));
+		strcat_s(syspath, fonts[i].filename);
 
-		ImFont **font = std::get<2>(fonts[i]);
-		*font = ImGui::GetIO().Fonts->AddFontFromFileTTF(syspath, std::get<1>(fonts[i]));
+		ImFont **font = fonts[i].font;
+		*font = ImGui::GetIO().Fonts->AddFontFromFileTTF(syspath, fonts[i].size);
 		if (!*font)
 			logFile << "InGameClock: failed to load font - " << syspath << std::endl;
 	}
@@ -104,7 +110,11 @@ bool Hooks::InGameUI()
 
 void Hooks::InGameUIAdd(void(*callback)()) { content.push_back(callback); }
 void Hooks::InGameUIAddWindow(void(*callback)(bool getsInput)) { windows.push_back(callback); }
-void Hooks::InGameUIAddFont(const char *filename, float size_pixels, ImFont **font) { fonts.emplace_back(filename, size_pixels, font); }
+void Hooks::InGameUIAddFont(const char* filename, float size_pixels, ImFont** font)
+{
+	struct ImFont_t imfont = { filename, size_pixels, font };
+	fonts.emplace_back(imfont);
+}
 
 namespace ImGui
 {
