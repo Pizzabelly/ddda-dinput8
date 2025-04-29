@@ -2,6 +2,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define TW_STATIC
 
+#define DISABLE_UNWANTED_HOOKS
+
 #include <SDKDDKVer.h>
 #include <windows.h>
 

@@ -243,6 +243,7 @@ void renderMiscUI()
 			Hooks::SwitchHook("DisableAutoCamH", pAutoCamH, disableAutoCam);
 		}
 
+#ifndef DISABLE_UNWANTED_HOOKS
 		std::pair<int, const char*> weather[]{ { 0, "Clear sky" }, { 1, "Cloudy" }, { 2, "Foggy" }, { 3, "Vulcanic" } };
 		ImGui::RadioButtons(GetBasePtr(0xB8780), weather);
 		ImGui::Checkbox("Weather - post game", GetBasePtr<bool>(0xB33A8));
@@ -295,6 +296,7 @@ void renderMiscUI()
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
+#endif
 	}
 }
 
@@ -344,6 +346,7 @@ void Hooks::Misc()
 		oAutoCamH = pAutoCamH + 7;
 	}
 
+#ifndef DISABLE_UNWANTED_HOOKS
 	BYTE *pOffset;
 	BYTE sigWeather[] = { 0x80, 0xB9, 0xA8, 0x33, 0x0B, 0x00, 0x00, 0x74, 0x15 };
 	if (FindSignature("Weather", sigWeather, &pOffset))
@@ -395,6 +398,7 @@ void Hooks::Misc()
 			CreateHook("JumpMod", pJumpMod2, &HJumpMod2, &oJumpMod2, jumpMod);
 		}
 	}
+#endif
 
 	InGameUIAdd(renderMiscUI);
 }

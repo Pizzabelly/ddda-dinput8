@@ -386,6 +386,7 @@ bool shareWeaponSkills, ignoreEquipVocation, ignoreSkillVocation;
 std::vector<std::pair<int, LPCSTR>> runTypeMapEV = { { -1, "Disabled" },{ 0, "Town Animation" },{ 1, "Town Animation + Stamina" },{ 2, "Stamina" } };
 void renderCheatsUI()
 {
+#ifndef DISABLE_UNWANTED_HOOKS
 	static bool setSkillsOpened = false, setAugmentsOpened = false, setAugmentModsOpened = false, setBuffModsOpened = false;
 	if (setSkillsOpened)
 	{
@@ -557,19 +558,23 @@ void renderCheatsUI()
 		ImGui::End();
 		ImGui::PopID();
 	}
+#endif
 
 	if (ImGui::CollapsingHeader("Cheats"))
 	{
+#ifndef DISABLE_UNWANTED_HOOKS
 		if (ImGui::Checkbox("Share weapon skills", &shareWeaponSkills))
 			config.setBool("cheats", "shareWeaponSkills", shareWeaponSkills);
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("requires game restart");
+#endif
 
 		if (ImGui::Checkbox("Ignore equip vocation", &ignoreEquipVocation))
 			config.setBool("cheats", "ignoreEquipVocation", ignoreEquipVocation);
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("requires game restart");
 
+#ifndef DISABLE_UNWANTED_HOOKS
 		if (ImGui::Checkbox("Ignore skill vocation", &ignoreSkillVocation))
 			config.setBool("cheats", "ignoreSkillVocation", ignoreSkillVocation);
 		if (ImGui::IsItemHovered())
@@ -653,11 +658,14 @@ void renderCheatsUI()
 			}
 			ImGui::TreePop();
 		}
+#endif
 	}
 }
 
 void Hooks::Cheats()
 {
+	BYTE* pOffset;
+#ifndef DISABLE_UNWANTED_HOOKS
 	BYTE sigRun[] = { 0x8B, 0x42, 0x40,			//mov	eax, [edx+40h]
 					0x53,						//push	ebx
 					0x8B, 0x5C, 0x24, 0x08 };	//mov	ebx, [esp+4+arg_0]
@@ -697,7 +705,6 @@ void Hooks::Cheats()
 		thirdSkillLevelsInit(3, config.getInts("cheats", "thirdSkillLevelPawn2"));
 	}
 
-	BYTE *pOffset;
 	BYTE sigAffinity[] = { 0x0F, 0xB7, 0x86, 0xB8, 0x08, 0x00, 0x00, 0x8B, 0xD8, 0x03, 0xC5 };
 	if (FindSignature("Cheat (affinity)", sigAffinity, &pOffset))
 	{
@@ -794,6 +801,7 @@ void Hooks::Cheats()
 	}
 	else
 		logFile << "Cheat (shareWeaponSkills): disabled" << std::endl;
+#endif
 
 	if ((ignoreEquipVocation = config.getBool("cheats", "ignoreEquipVocation", false)))
 	{
@@ -818,6 +826,7 @@ void Hooks::Cheats()
 	else
 		logFile << "Cheat (ignoreEquipVocation): disabled" << std::endl;
 
+#ifndef DISABLE_UNWANTED_HOOKS
 	if ((ignoreSkillVocation = config.getBool("cheats", "ignoreSkillVocation", false)))
 	{
 		BYTE sig1[] = { 0x74, 0x2F, 0x8B, 0x47, 0x10 };
@@ -832,6 +841,7 @@ void Hooks::Cheats()
 	}
 	else
 		logFile << "Cheat (ignoreSkillVocation): disabled" << std::endl;
+#endif
 
 	InGameUIAdd(renderCheatsUI);
 }

@@ -75,7 +75,10 @@ WPARAM inGameUIHotkey;
 LRESULT CALLBACK inGameUIEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_KEYDOWN && (HIWORD(lParam) & KF_REPEAT) == 0 && wParam == inGameUIHotkey)
+	{
 		Hooks::SwitchHook("InGameUI", pInGameUI, inGameUIEnabled = !inGameUIEnabled);
+		ShowCursor(inGameUIEnabled);
+	}
 	return inGameUIEnabled ? ImGui_ImplDX9_WndProcHandler(hwnd, msg, wParam, lParam) : 0;
 }
 

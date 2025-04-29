@@ -15,7 +15,9 @@ void SendKeyPress(DWORD vKey)
 
 DWORD WINAPI hotkeyProc(LPVOID vKey)
 {
+#ifndef DISABLE_UNWANTED_HOOKS
 	Sleep(menuPause);
+#endif
 	if ((DWORD)vKey)
 		SendKeyPress((DWORD)vKey);
 	SendKeyPress(VK_RETURN);
@@ -79,6 +81,7 @@ void Hooks::Hotkeys()
 	if (config.getBool("hotkeys", "enabled", false))
 	{
 		borderlessFullscreen = config.getBool("main", "borderlessFullscreen", false);
+#ifndef DISABLE_UNWANTED_HOOKS
 		menuPause = config.getUInt("hotkeys", "menuPause", 500);
 		HotkeysAdd("keySave", VK_F5, []() { if (pSave && *pSave) (*pSave)[0x21AFD6] = 1; });
 		HotkeysAdd("keyCheckpoint", VK_F9, []() { if (pSave && *pSave) (*pSave)[0x21AFD5] = 1; });
@@ -86,6 +89,7 @@ void Hooks::Hotkeys()
 		HotkeysAdd("keyJournal", 'J', []() { hotkeyStart(VK_LEFT); });
 		HotkeysAdd("keyEquipment", 'U', []() { hotkeyStart(VK_RIGHT); });
 		HotkeysAdd("keyStatus", 'K', []() { hotkeyStart(VK_DOWN); });
+#endif
 
 		BYTE sig[] = { 0x83, 0xEC, 0x50,			//sub	esp, 50h
 						0x53,						//push	ebx
@@ -103,12 +107,14 @@ void Hooks::Hotkeys()
 		if (FindSignature("Hotkeys1", sig, &pOffset) || FindSignature("Hotkeys2", sig2, &pOffset))
 			CreateHook("Hotkeys", pOffset, &HWndProc, &oWndProc);
 
+#ifndef DISABLE_UNWANTED_HOOKS
 		BYTE sigSave[] = { 0x8B, 0x15, 0xCC, 0xCC, 0xCC, 0xCC,	//mov	edx, savePointer
 							0x0F, 0x95, 0xC0,					//setnz	al
 							0x83, 0xC9, 0xFF };					//or	ecx, 0FFFFFFFFh
 
 		if (FindSignature("HotkeysSave", sigSave, &pOffset))
 			pSave = (BYTE**)*(LPDWORD)(pOffset + 2);
+#endif
 	}
 	else
 		logFile << "Hotkeys: disabled" << std::endl;

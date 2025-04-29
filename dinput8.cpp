@@ -32,19 +32,25 @@ void InitHooks()
 	if (Hooks::FindSignature("WorldPointer", sigWorld, &pOffset))
 		pWorld = *(BYTE***)(pOffset + 2);
 
+#ifndef DISABLE_UNWANTED_HOOKS
 	Hooks::SaveBackup();
+#endif
 	Hooks::Hotkeys();
 	Hooks::Misc();
 	Hooks::Cheats();
 	Hooks::Server();
+#ifndef DISABLE_UNWANTED_HOOKS
 	Hooks::WeaponSets();
+#endif
 	if (Hooks::InGameUI())
 	{
+#ifndef DISABLE_UNWANTED_HOOKS
 		Hooks::Portcrystals();
 		Hooks::PlayerStats();
 		Hooks::ItemEditor();
 		Hooks::InGameClock();
 		Hooks::DamageLog();
+#endif
 	}
 }
 
