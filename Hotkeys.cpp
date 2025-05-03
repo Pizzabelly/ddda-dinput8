@@ -30,7 +30,7 @@ void hotkeyStart(DWORD vKey)
 	QueueUserWorkItem(hotkeyProc, (LPVOID)vKey, WT_EXECUTEDEFAULT);
 }
 
-bool borderlessFullscreen = false;
+bool borderlessFullscreen = false, ignoreFocusLoss = false;
 void setBorderlessFullscreen(HWND hwnd)
 {
 	LONG lStyle = GetWindowLong(hwnd, GWL_STYLE);
@@ -55,6 +55,19 @@ LRESULT CALLBACK HWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_SIZE && borderlessFullscreen)
 		setBorderlessFullscreen(hwnd);
+
+	if (ignoreFocusLoss)
+	{
+		// https://github.com/Lyall/DDDAFix/blob/e7689f81c7ba0ce06b4bb6d6747b398e93bd4fcb/src/dllmain.cpp#L55
+		if (msg == WM_ACTIVATEAPP && wParam == FALSE)
+		{
+			return 0;
+		}
+		else if (msg == WM_KILLFOCUS)
+		{
+			return 0;
+		}
+	}
 
 	if (wndProcHandler(hwnd, msg, wParam, lParam))
 		return 0;
@@ -81,6 +94,7 @@ void Hooks::Hotkeys()
 	if (config.getBool("hotkeys", "enabled", false))
 	{
 		borderlessFullscreen = config.getBool("main", "borderlessFullscreen", false);
+		ignoreFocusLoss = config.getBool("main", "disablePauseOnFocusLoss", false);
 #ifndef DISABLE_UNWANTED_HOOKS
 		menuPause = config.getUInt("hotkeys", "menuPause", 500);
 		HotkeysAdd("keySave", VK_F5, []() { if (pSave && *pSave) (*pSave)[0x21AFD6] = 1; });
@@ -106,6 +120,36 @@ void Hooks::Hotkeys()
 		BYTE *pOffset;
 		if (FindSignature("Hotkeys1", sig, &pOffset) || FindSignature("Hotkeys2", sig2, &pOffset))
 			CreateHook("Hotkeys", pOffset, &HWndProc, &oWndProc);
+
+		BYTE sig3[] = { 0x8B, 0x08,	//mov ecx,[eax]
+			0x8D, 0x54, 0x24, 0x28,	//lea edx, [esp + 28]
+			0x52,					//push edx
+			0x6A, 0x14,				//push 14
+			0x50,					//push eax
+			0x8B, 0x41, 0x24,		//mov eax, [ecx + 24]
+			0xFF, 0xD0,				//call eax
+			0x85, 0xC0 };			//test eax, eax
+									//DDDA.exe+A04C23 - 0F88 29010000		  - js DDDA.exe+A04D52
+
+		/*
+		DDDA.exe+A04C2F - 0F5B C0				- cvtdq2ps xmm0,xmm0
+		DDDA.exe+A04C32 - F3 0F59 87 0C010000	- mulss xmm0,[edi+0000010C]
+		DDDA.exe+A04C3A - F3 0F2C C8			- cvttss2si ecx,xmm0
+
+		DDDA.exe+A04C44 - 0F5B C0				- cvtdq2ps xmm0,xmm0
+		DDDA.exe+A04C47 - 89 4E 0C				- mov [esi+0C],ecx
+		DDDA.exe+A04C4A - F3 0F59 87 0C010000	- mulss xmm0,[edi+0000010C]
+		DDDA.exe+A04C52 - F3 0F2C D0			- cvttss2si edx,xmm0
+
+		DDDA.exe+A04C29 - C5F9EFC0				- vpxor xmm0,xmm0,xmm0
+		*/
+
+		if (FindSignature("ReadMouse", sig3, &pOffset))
+		{
+			Set<BYTE>(pOffset + 0x17, { 0xC5, 0xF9, 0xEF, 0xC0, 0x90, 0x90 });
+			Set<BYTE>(pOffset + 0x2c, { 0xC5, 0xF9, 0xEF, 0xC0, 0x90, 0x90 });
+			Set<BYTE>(pOffset + 0x44, { 0xC5, 0xF9, 0xEF, 0xC0, 0x90, 0x90 });
+		}
 
 #ifndef DISABLE_UNWANTED_HOOKS
 		BYTE sigSave[] = { 0x8B, 0x15, 0xCC, 0xCC, 0xCC, 0xCC,	//mov	edx, savePointer

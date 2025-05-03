@@ -220,6 +220,11 @@ void renderMiscUI()
 			config.setBool("main", "borderlessFullscreen", borderlessFullscreen);
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("requires game restart");
+		static bool disablePauseOnFocusLoss = config.getBool("main", "disablePauseOnFocusLoss", false);
+		if (ImGui::Checkbox("Disable pause on focus loss", &disablePauseOnFocusLoss))
+			config.setBool("main", "disablePauseOnFocusLoss", disablePauseOnFocusLoss);
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("also requires game restart");
 
 		if (ImGui::Checkbox("Char customization", &charCustomization))
 		{

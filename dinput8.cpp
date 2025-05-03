@@ -2,6 +2,7 @@
 #include "MinHook\MinHook.h"
 #include "d3d9.h"
 #include "SaveBackup.h"
+#include "Camera.h"
 #include "Misc.h"
 #include "Cheats.h"
 #include "InGameClock.h"
@@ -37,6 +38,7 @@ void InitHooks()
 #endif
 	Hooks::Hotkeys();
 	Hooks::Misc();
+	Hooks::Camera();
 	Hooks::Cheats();
 	Hooks::Server();
 #ifndef DISABLE_UNWANTED_HOOKS

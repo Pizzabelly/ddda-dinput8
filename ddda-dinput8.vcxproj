@@ -99,6 +99,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DamageLog.cpp" />
     <ClCompile Include="InGameUI.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
@@ -133,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DamageLog.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="InGameUI.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
